@@ -236,7 +236,20 @@ def test_pipeline_composer_software_unknown_schema_raises():
         composer.compose(domain="software", schema="schemaX", platform=None)
 
 
+def test_pipeline_composer_training_unknown_schema_raises():
+    composer = PipelineComposer()
+    with pytest.raises(ValueError):
+        composer.compose(domain="training", schema="X", platform="github")
+
+
+def test_pipeline_composer_training_bioschemas_github():
+    composer = PipelineComposer()
+    pipeline = composer.compose(domain="training", schema="bioschemas", platform="github")
+    assert pipeline is not None
+    assert len(pipeline.steps) > 0
+
+
 def test_pipeline_composer_unknown_domain_raises():
     composer = PipelineComposer()
     with pytest.raises(ValueError):
-        composer.compose(domain="training", schema="X", platform=None)
+        composer.compose(domain="books", schema="X", platform=None)

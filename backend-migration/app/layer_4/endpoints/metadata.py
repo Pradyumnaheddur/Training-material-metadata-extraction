@@ -11,6 +11,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import HttpUrl
 
+from app.layer_4.constants import SUPPORTED_SCHEMAS
 from app.layer_4.schemas.metadata import (
     FairnessResponse,
     MetadataEnrichedResponse,
@@ -41,7 +42,7 @@ async def extract_metadata_plain(
     schema: str = Query(
         "maSMP",
         description="Schema to analyze against",
-        enum=["maSMP", "CODEMETA"],
+        enum=SUPPORTED_SCHEMAS,
     ),
     access_token: Optional[str] = Query(
         None,
@@ -93,7 +94,7 @@ async def extract_metadata_enriched(
     schema: str = Query(
         "maSMP",
         description="Schema to analyze against",
-        enum=["maSMP", "CODEMETA"],
+        enum=SUPPORTED_SCHEMAS,
     ),
     access_token: Optional[str] = Query(
         None,
@@ -215,7 +216,7 @@ async def extract_metadata_stream(
     schema: str = Query(
         "maSMP",
         description="Schema to analyze against",
-        enum=["maSMP", "CODEMETA"],
+        enum=SUPPORTED_SCHEMAS,
     ),
     access_token: Optional[str] = Query(
         None,
@@ -267,7 +268,7 @@ async def get_fairness(
     schema: str = Query(
         "maSMP",
         description="Schema to analyze against",
-        enum=["maSMP", "CODEMETA"],
+        enum=SUPPORTED_SCHEMAS,
     ),
     access_token: Optional[str] = Query(
         None,
@@ -323,7 +324,7 @@ async def extract_single_property(
     schema: str = Query(
         "maSMP",
         description="Schema to analyze against",
-        enum=["maSMP", "CODEMETA"],
+        enum=SUPPORTED_SCHEMAS,
     ),
     property_name: str = Query(
         ...,

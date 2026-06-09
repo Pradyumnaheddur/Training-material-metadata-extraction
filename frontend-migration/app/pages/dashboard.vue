@@ -26,6 +26,7 @@
             >
               <option value="maSMP">maSMP</option>
               <option value="CodeMeta">CodeMeta</option>
+              <option value="Bioschemas">Bioschemas</option>
             </select>
           </div>
 
@@ -358,7 +359,7 @@ const repoUrl = computed({
   set: (v: string) => { extractionStore.repoUrl = v },
 })
 
-const schema = computed<'maSMP' | 'CodeMeta'>({
+const schema = computed<'maSMP' | 'CodeMeta' | 'Bioschemas'>({
   get: () => extractionStore.schema,
   set: (v) => { extractionStore.schema = v },
 })

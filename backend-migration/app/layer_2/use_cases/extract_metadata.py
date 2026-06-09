@@ -23,6 +23,7 @@ from app.layer_1.provenance.software.defaults import (
     SOURCE_WAYBACK,
     SOURCE_ZENODO_BADGE,
 )
+from app.layer_2.use_cases.domain_schema import resolve_extraction_context
 from app.layer_3.composers import PipelineComposer
 from app.layer_3.extraction_metadata import ExtractionMetadataCollector
 from app.layer_3.steps.contracts import ExtractionPipelineRunner, StepContext, StepState
@@ -114,9 +115,11 @@ class ExtractMetadataUseCase:
         if not platform:
             raise ValueError("Unsupported repository platform. Supported: GitHub, GitLab")
 
+        domain, normalized_schema = resolve_extraction_context(schema)
+
         pipeline = self.pipeline_composer.compose(
-            domain="software",
-            schema=schema,
+            domain=domain,
+            schema=normalized_schema,
             platform=platform,
         )
 
@@ -128,8 +131,8 @@ class ExtractMetadataUseCase:
         )
         context = StepContext(
             repo_url=repo_url,
-            domain="software",
-            schema=schema,
+            domain=domain,
+            schema=normalized_schema,
             platform=platform,
             access_token=access_token,
         )
@@ -137,7 +140,7 @@ class ExtractMetadataUseCase:
 
         # Step 5: Build JSON-LD document
         has_release = metadata.has_release
-        jsonld_document = self.jsonld_builder.build_jsonld(metadata, schema, has_release)
+        jsonld_document = self.jsonld_builder.build_jsonld(metadata, normalized_schema, has_release)
 
         extraction_metadata = collector.get_all() if collector else {}
         return ExtractMetadataResult(

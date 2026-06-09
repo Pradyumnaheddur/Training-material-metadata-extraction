@@ -12,6 +12,9 @@ from app.layer_3.composers.profiles.software_gitlab_codemeta import (
 from app.layer_3.composers.profiles.software_gitlab_masmp import (
     build_software_gitlab_masmp_pipeline,
 )
+from app.layer_3.composers.profiles.training_github_bioschemas import (
+    build_training_github_bioschemas_pipeline,
+)
 from app.layer_3.steps.contracts.pipeline import ExtractionPipeline
 
 
@@ -30,9 +33,11 @@ class PipelineComposer:
         schema: str,
         platform: str | None = None,
     ) -> ExtractionPipeline:
-        if domain == "software":
-            normalized_schema = schema.strip().lower()
-            normalized_platform = (platform or "github").strip().lower()
+        normalized_domain = domain.strip().lower()
+        normalized_schema = schema.strip().lower().replace("_", "").replace("-", "")
+        normalized_platform = (platform or "github").strip().lower()
+
+        if normalized_domain == "software":
             if normalized_schema == "masmp":
                 if normalized_platform == "github":
                     return build_software_github_masmp_pipeline()
@@ -54,6 +59,19 @@ class PipelineComposer:
             raise ValueError(
                 f"Unsupported schema for software domain: {schema!r}. "
                 "Expected one of: 'maSMP', 'codemeta'."
+            )
+
+        if normalized_domain == "training":
+            if normalized_schema in {"bioschemas", "trainingmaterial"}:
+                if normalized_platform == "github":
+                    return build_training_github_bioschemas_pipeline()
+                raise ValueError(
+                    f"Unsupported platform for training/Bioschemas: {platform!r}. "
+                    "Expected one of: 'github' or None."
+                )
+            raise ValueError(
+                f"Unsupported schema for training domain: {schema!r}. "
+                "Expected one of: 'bioschemas', 'TrainingMaterial'."
             )
 
         raise ValueError(

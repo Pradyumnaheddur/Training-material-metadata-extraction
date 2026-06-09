@@ -68,6 +68,41 @@
       </div>
     </template>
 
+    <!-- Bioschemas TrainingMaterial: categorized flat document -->
+    <template v-else-if="isBioschemas">
+      <h3 class="text-sm font-semibold uppercase tracking-wide text-gray-600">
+        Bioschemas TrainingMaterial metadata
+      </h3>
+      <div class="space-y-8">
+        <section
+          v-for="cat in bioschemasCategoryConfig"
+          :key="cat.key"
+          class="rounded-xl border-2 overflow-hidden"
+          :class="cat.sectionClass"
+        >
+          <header
+            class="flex items-center gap-3 px-4 py-3 font-semibold"
+            :class="cat.headerClass"
+          >
+            <span
+              class="rounded-md px-2.5 py-1 text-xs font-bold uppercase tracking-wider"
+              :class="cat.badgeClass"
+            >
+              {{ cat.key }}
+            </span>
+            <span :class="cat.titleClass">{{ cat.label }}</span>
+          </header>
+          <div class="border-t bg-white" :class="cat.borderClass">
+            <ResultTable
+              :rows="bioschemasRowsByCategory(cat.key)"
+              :show-source="true"
+              :show-confidence="true"
+            />
+          </div>
+        </section>
+      </div>
+    </template>
+
     <!-- CodeMeta: single section -->
     <template v-else>
       <h3 class="text-sm font-semibold uppercase tracking-wide text-gray-600">
@@ -120,6 +155,36 @@ const categoryConfig = [
   }
 ] as const
 
+const bioschemasCategoryConfig = [
+  {
+    key: 'Minimum',
+    label: 'Minimum properties for this profile',
+    sectionClass: 'border-amber-200 bg-amber-50/30',
+    headerClass: 'bg-amber-50/80 text-amber-900',
+    badgeClass: 'bg-amber-200 text-amber-800',
+    titleClass: 'text-amber-900',
+    borderClass: 'border-amber-100'
+  },
+  {
+    key: 'Recommended',
+    label: 'Recommended for richer metadata',
+    sectionClass: 'border-primary-200 bg-primary-50/20',
+    headerClass: 'bg-primary-50/80 text-primary-900',
+    badgeClass: 'bg-primary-200 text-primary-800',
+    titleClass: 'text-primary-900',
+    borderClass: 'border-primary-100'
+  },
+  {
+    key: 'Optional',
+    label: 'Additional optional properties',
+    sectionClass: 'border-slate-200 bg-slate-50/60',
+    headerClass: 'bg-slate-100/80 text-slate-700',
+    badgeClass: 'bg-slate-200 text-slate-600',
+    titleClass: 'text-slate-700',
+    borderClass: 'border-slate-100'
+  }
+] as const
+
 const masmpTabs = [
   { key: 'maSMP:SoftwareSourceCode', label: 'Software source code' },
   { key: 'maSMP:SoftwareApplication', label: 'Software application' }
@@ -127,9 +192,21 @@ const masmpTabs = [
 
 const activeTab = ref('maSMP:SoftwareSourceCode')
 
+const isBioschemas = computed(() => {
+  const s = (props.result.schema ?? '').toLowerCase().replace(/[_-]/g, '')
+  if (s === 'bioschemas' || s === 'trainingmaterial') return true
+  const results = props.result.results
+  if (results && typeof results === 'object' && !Array.isArray(results)) {
+    if ((results as Record<string, unknown>)['@type'] === 'LearningResource') return true
+    if (props.result.enriched_metadata?.bioschemas) return true
+  }
+  return false
+})
+
 const isMaSMP = computed(() => {
+  if (isBioschemas.value) return false
   const s = props.result.schema?.toLowerCase()
-  return s === 'masmp' || s === 'maSMP'
+  return s === 'masmp'
 })
 
 const profileData = (profileKey: string): Record<string, unknown> => {
@@ -183,6 +260,40 @@ function rowsByCategory(profileKey: string, category: string): { property: strin
         value: useSpecial ? '' : formatValueForProperty(prop, val),
         source: meta?.source ?? '—',
         confidence: meta?.confidence != null ? `${Math.round(Number(meta.confidence) * 100)}%` : '—',
+        ...(authorItems ? { authorItems } : {}),
+        ...(contributorItems ? { contributorItems } : {}),
+        ...(namedLink ? { namedLink } : {}),
+        ...(bibCard ? { bibCard } : {})
+      }
+    })
+}
+
+function bioschemasRowsByCategory(category: string): { property: string; value: string; source: string | string[]; confidence: string; authorItems?: AuthorDisplayItem[] }[] {
+  const data = props.result.results
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return []
+
+  const enriched = (props.result.enriched_metadata?.bioschemas ?? {}) as Record<string, EnrichedProperty>
+  const skip = new Set(['@context', '@type', '@id'])
+  const catLower = category.toLowerCase()
+
+  return Object.entries(data)
+    .filter(([k]) => !skip.has(k))
+    .filter(([k]) => {
+      const c = enriched[k]?.category ?? 'optional'
+      return (typeof c === 'string' ? c.toLowerCase() : 'optional') === catLower
+    })
+    .map(([prop, val]) => {
+      const meta = enriched[prop] ?? {}
+      const authorItems = getAuthorItems(prop, val)
+      const contributorItems = getContributorItems(prop, val)
+      const namedLink = getNamedLink(prop, val)
+      const bibCard = getBibCard(prop, val)
+      const useSpecial = authorItems ?? contributorItems ?? namedLink ?? bibCard
+      return {
+        property: formatPropertyName(prop),
+        value: useSpecial ? '' : formatValueForProperty(prop, val),
+        source: meta.source ?? '—',
+        confidence: meta.confidence != null ? `${Math.round(Number(meta.confidence) * 100)}%` : '—',
         ...(authorItems ? { authorItems } : {}),
         ...(contributorItems ? { contributorItems } : {}),
         ...(namedLink ? { namedLink } : {}),

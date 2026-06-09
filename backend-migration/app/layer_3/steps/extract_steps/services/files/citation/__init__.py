@@ -4,6 +4,9 @@ Extraction steps read source content and write normalized intermediate values
 to ``StepState.data``. They do not update ``StepState.metadata`` directly.
 """
 
+from app.layer_3.steps.extract_steps.services.files.citation.extract_citation_abstract_step import (
+    ExtractCitationAbstractStep,
+)
 from app.layer_3.steps.extract_steps.services.files.citation.extract_citation_authors_step import (
     ExtractCitationAuthorsStep,
 )
@@ -21,6 +24,7 @@ from app.layer_3.steps.extract_steps.services.files.citation.extract_citation_ti
 )
 
 __all__ = [
+    "ExtractCitationAbstractStep",
     "ExtractCitationAuthorsStep",
     "ExtractCitationDoiStep",
     "ExtractCitationKeywordsStep",

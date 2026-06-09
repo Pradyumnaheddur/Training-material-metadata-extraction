@@ -18,7 +18,7 @@ export interface ExtractionProgress {
 export interface EnrichedProperty {
   confidence?: number | null
   source?: string | string[] | null
-  category?: 'required' | 'recommended' | 'optional'
+  category?: 'required' | 'recommended' | 'optional' | 'minimum'
 }
 
 export interface ExtractionStreamResult {
@@ -31,6 +31,14 @@ export interface ExtractionStreamResult {
 }
 
 export type ProgressCallback = (progress: ExtractionProgress) => void
+
+function toApiSchema(schema: string): string {
+  const normalized = schema.trim().toLowerCase()
+  if (normalized === 'codemeta') return 'CODEMETA'
+  if (normalized === 'bioschemas' || normalized === 'trainingmaterial') return 'Bioschemas'
+  if (normalized === 'masmp') return 'maSMP'
+  return schema
+}
 
 export const useApi = () => {
   const config = useRuntimeConfig()
@@ -52,7 +60,7 @@ export const useApi = () => {
       const response = await api.get('/metadata', {
         params: {
           repo_url: repoUrl,
-          schema,
+          schema: toApiSchema(schema),
           access_token: accessToken
         }
       })
@@ -77,7 +85,7 @@ export const useApi = () => {
       const response = await api.get('/api/fairness', {
         params: {
           repo_url: repoUrl,
-          schema: schema === 'CodeMeta' ? 'CODEMETA' : schema,
+          schema: toApiSchema(schema),
           access_token: accessToken,
         },
       })
@@ -105,7 +113,7 @@ export const useApi = () => {
   ): Promise<ExtractionStreamResult> => {
     const params = new URLSearchParams({
       repo_url: repoUrl,
-      schema: schema === 'CodeMeta' ? 'CODEMETA' : 'maSMP'
+      schema: toApiSchema(schema),
     })
     if (accessToken) params.set('access_token', accessToken)
     const url = `${apiBase}/api/metadata/stream?${params.toString()}`

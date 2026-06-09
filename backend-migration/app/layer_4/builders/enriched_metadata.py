@@ -4,6 +4,8 @@ Values come from results; this module only shapes annotations for the response.
 """
 from typing import Dict, Any
 
+from app.layer_1.schemas.bioschemas.profiles import get_category_for_key as get_bioschemas_category_for_key
+from app.layer_1.schemas.definitions import normalize_schema_key
 from app.layer_1.schemas.masmp.profiles import get_category_for_key
 
 
@@ -84,5 +86,27 @@ def build_enriched_metadata(
 
         return result
 
-    # Other schemas not yet annotated
+  # Bioschemas TrainingMaterial: flat root document with minimum/recommended/optional
+    if normalize_schema_key(schema) == "bioschemas":
+        result: Dict[str, Dict[str, Dict[str, Any]]] = {"bioschemas": {}}
+        skip_keys = {"@context", "@type", "@id", "dct:conformsTo"}
+
+        for prop_key in jsonld_document.keys():
+            if prop_key in skip_keys:
+                continue
+            entity_key = _jsonld_key_to_entity_key(prop_key)
+            record = extraction_metadata.get(entity_key, {})
+            result["bioschemas"][prop_key] = {
+                "confidence": record.get("confidence"),
+                "source": record.get("source"),
+                "category": get_bioschemas_category_for_key(prop_key),
+            }
+
+        result["bioschemas"]["dct:conformsTo"] = {
+            "confidence": 1.0,
+            "source": "Constant",
+            "category": "minimum",
+        }
+        return result
+
     return {}

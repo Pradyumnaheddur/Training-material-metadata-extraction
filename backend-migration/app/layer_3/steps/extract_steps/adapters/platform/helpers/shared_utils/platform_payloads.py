@@ -5,6 +5,7 @@ from urllib.parse import quote
 from app.layer_3.steps.contracts import StepContext, StepState
 from app.layer_3.steps.extract_steps.adapters.platform.helpers.github_utils.github_client import (
     GitHubClient,
+    GitHubRateLimitError,
 )
 from app.layer_3.steps.extract_steps.adapters.platform.helpers.github_utils.github_file_fetcher import (
     GitHubFileFetcher,
@@ -61,6 +62,8 @@ def github_repo_payload(context: StepContext, state: StepState) -> dict:
         owner, repo = repo_parts(context)
         try:
             state.data["repo_payload"] = github_client(context, state).get_repo(owner, repo)
+        except GitHubRateLimitError:
+            raise
         except Exception:
             state.data["repo_payload"] = {}
     return state.data.get("repo_payload") or {}

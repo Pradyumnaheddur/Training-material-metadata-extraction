@@ -10,6 +10,7 @@ from app.layer_3.builders.jsonld_builder import JSONLDBuilder
 from app.layer_3.extraction_metadata import InMemoryExtractionMetadataCollector
 from app.layer_3.steps.contracts import ExtractionPipelineRunner
 from app.layer_2.use_cases.extract_metadata import ExtractMetadataUseCase
+from app.layer_1.schemas.definitions import normalize_schema_key
 from app.layer_4.builders.enriched_metadata import build_enriched_metadata
 from app.layer_3.steps.contracts.progress_observer import ProgressObserver
 
@@ -127,6 +128,21 @@ def run_single_property_extraction(
     results: List[Dict[str, Any]] = []
 
     enriched = enriched or {}
+
+    if normalize_schema_key(schema) == "bioschemas":
+        value = jsonld_document.get(property_name)
+        profile_key = "bioschemas"
+        profile_meta = enriched.get(profile_key, {})
+        record = profile_meta.get(property_name, {})
+        results.append(
+            {
+                "profile": profile_key,
+                "value": value,
+                "source": record.get("source"),
+                "confidence": record.get("confidence"),
+            }
+        )
+        return extracted_at, results
 
     if schema == "CODEMETA":
         value = jsonld_document.get(property_name)

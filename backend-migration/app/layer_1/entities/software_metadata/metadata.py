@@ -74,6 +74,15 @@ class SoftwareMetadata(BaseModel):
     masmp_testInstructions: Optional[str] = None
     masmp_changelog: Optional[str] = None
 
+    # Bioschemas TrainingMaterial (also used by training-domain extraction)
+    abstract: Optional[str] = None
+    teaches: Optional[List[str]] = None
+    learningResourceType: Optional[List[str]] = None
+    educationalLevel: Optional[str] = None
+    competencyRequired: Optional[List[str]] = None
+    inLanguage: Optional[List[str]] = None
+    audience: Optional[Dict[str, Any]] = None
+
     # Metadata
     identifier: Optional[List[str]] = None
     keywords: Optional[List[str]] = None

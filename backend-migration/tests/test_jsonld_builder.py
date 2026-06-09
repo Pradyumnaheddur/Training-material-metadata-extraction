@@ -2,6 +2,7 @@
 Unit tests for JSONLDBuilder.
 Cover maSMP and CODEMETA JSON-LD building, field mapping, and allowed-fields filtering.
 """
+from app.layer_1.schemas.bioschemas.export_fields import BIOSCHEMAS_TRAINING_MATERIAL_PROFILE_URL
 from app.layer_3.builders.jsonld_builder import JSONLDBuilder
 from app.layer_1.entities.shared_primitives import VersionControlSystem
 from app.layer_1.entities.software_metadata import SoftwareMetadata
@@ -72,4 +73,37 @@ def test_build_jsonld_masmp_includes_has_release_and_nested_structures():
     # codemeta_readme is mapped as codemeta:readme
     assert ssc["codemeta:readme"] == "https://example.com/README.md"
     assert app["codemeta:readme"] == "https://example.com/README.md"
+
+
+def test_build_jsonld_bioschemas_training_material_profile():
+    builder = JSONLDBuilder()
+    metadata = _base_metadata()
+
+    jsonld = builder.build_jsonld(metadata, schema="Bioschemas", has_release=False)
+
+    assert jsonld["@type"] == "LearningResource"
+    assert jsonld["name"] == "Test Repo"
+    assert jsonld["description"] == "Desc"
+    assert jsonld["keywords"] == ["a", "b"]
+    assert str(jsonld["url"]) == "https://example.com/repo"
+    assert str(jsonld["@id"]) == "https://example.com/repo"
+    assert jsonld["dct:conformsTo"]["@id"] == BIOSCHEMAS_TRAINING_MATERIAL_PROFILE_URL
+    assert jsonld["license"] == ["MIT"]
+    assert "codemeta:readme" not in jsonld
+
+
+def test_build_jsonld_bioschemas_includes_training_fields_from_metadata():
+    builder = JSONLDBuilder()
+    metadata = _base_metadata()
+    metadata.abstract = "A short tutorial abstract."
+    metadata.teaches = ["Recall shell commands"]
+    metadata.learningResourceType = ["tutorial"]
+    metadata.educationalLevel = "Beginner"
+
+    jsonld = builder.build_jsonld(metadata, schema="Bioschemas", has_release=False)
+
+    assert jsonld["abstract"] == "A short tutorial abstract."
+    assert jsonld["teaches"] == ["Recall shell commands"]
+    assert jsonld["learningResourceType"] == ["tutorial"]
+    assert jsonld["educationalLevel"] == "Beginner"
 

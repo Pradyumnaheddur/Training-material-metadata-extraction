@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import type { ExtractionStreamResult } from '../composables/useApi'
 
-type SchemaType = 'maSMP' | 'CodeMeta'
+type SchemaType = 'maSMP' | 'CodeMeta' | 'Bioschemas'
 
 interface ExtractionState {
   repoUrl: string

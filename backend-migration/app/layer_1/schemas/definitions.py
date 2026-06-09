@@ -1,8 +1,8 @@
 """Schema output definitions used by schema-driven JSON-LD rendering."""
 
 from dataclasses import dataclass
-from typing import Any, Mapping
 
+from app.layer_1.schemas.bioschemas.export_fields import BIOSCHEMAS_TRAINING_MATERIAL_EXPORT_KEYS
 from app.layer_1.schemas.codemeta.export_fields import CODEMETA_SOFTWARE_SOURCE_CODE_EXPORT_KEYS
 from app.layer_1.schemas.masmp.export_fields import (
     MASMP_SOFTWARE_APPLICATION_EXPORT_KEYS,
@@ -64,12 +64,34 @@ SCHEMA_DEFINITIONS: dict[str, SchemaDefinition] = {
             ),
         ),
     ),
+    "bioschemas": SchemaDefinition(
+        schema_key="bioschemas",
+        nodes=(
+            SchemaNodeDefinition(
+                key="__root__",
+                context=[
+                    "https://schema.org/",
+                    {"dct": "http://purl.org/dc/terms/"},
+                ],
+                type_value="LearningResource",
+                export_keys=BIOSCHEMAS_TRAINING_MATERIAL_EXPORT_KEYS,
+            ),
+        ),
+    ),
 }
+
+SCHEMA_DEFINITIONS["trainingmaterial"] = SCHEMA_DEFINITIONS["bioschemas"]
+
+
+def normalize_schema_key(schema: str) -> str:
+    normalized = schema.strip().lower().replace("_", "").replace("-", "")
+    if normalized == "trainingmaterial":
+        return "bioschemas"
+    return normalized
 
 
 def get_schema_definition(schema: str) -> SchemaDefinition:
-    normalized = schema.strip().lower()
+    normalized = normalize_schema_key(schema)
     if normalized not in SCHEMA_DEFINITIONS:
         raise ValueError(f"Unsupported schema: {schema!r}")
     return SCHEMA_DEFINITIONS[normalized]
-
