@@ -5,15 +5,15 @@
     :class="inverted ? 'text-white hover:text-cyan-200' : 'text-secondary-800'"
   >
     <img
-      src="/COMET-RS.png"
-      alt="CoMET-RS"
-      :class="['w-auto', inverted ? 'h-10 sm:h-12 brightness-0 invert' : 'h-10 sm:h-12']"
+      src="/discoRSE.png"
+      alt="DiscoRSE"
+      class="h-10 sm:h-12 w-auto"
     />
     <div v-if="!inverted" class="flex flex-col">
-      <span>CoMET-RS</span>
-      <span class="text-xs sm:text-sm text-gray-600 hidden sm:block font-normal">maSMP Metadata Extractor</span>
+      <span>DiscoRSE</span>
+      <span class="text-xs sm:text-sm text-gray-600 hidden sm:block font-normal">Training Material Metadata Extractor</span>
     </div>
-    <span v-else>CoMET-RS</span>
+    <span v-else>DiscoRSE</span>
   </NuxtLink>
 </template>
 

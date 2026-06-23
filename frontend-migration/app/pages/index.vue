@@ -4,16 +4,28 @@
     <section class="shrink-0 pt-5 pb-8 sm:pt-6 sm:pb-10">
       <div class="container-custom">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
-          <!-- Left card: About CoMET-RS -->
+          <!-- Left card: About DiscoRSE -->
           <Card padding="pt-4 px-5 pb-6 sm:pt-5 sm:px-6 sm:pb-7" custom-class="rounded-xl flex flex-col">
             <h1 class="text-xl sm:text-2xl font-bold text-secondary-800 tracking-tight mb-2.5">
-              About CoMET-RS
+              About DiscoRSE
             </h1>
             <p class="text-gray-600 text-sm sm:text-base leading-relaxed mb-4">
-              The Code Metadata Extraction Tool for Research Software (CoMET-RS) is a web application that automatically extracts metadata from a code repository and displays it in a user-friendly interface.
+              <a
+                href="https://www.discorse.de/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-medium text-primary-700 hover:text-primary-800 underline-offset-2 hover:underline"
+              >DiscoRSE</a>
+              improves how Research Software Engineering open educational resources are found and used. RSE training materials are scattered across many sites with no central directory — the project builds a community-defined metadata schema and OER catalog for topic search, learning pathways, author visibility, and accessibility.
             </p>
             <p class="text-gray-600 text-sm sm:text-base leading-relaxed mb-4">
-              It generates metadata conforming to machine-actionable Software Management Plans (maSMPs) and CodeMeta schemas, helping standardize documentation, improve interoperability, and reduce maintenance effort.
+              This tool extracts metadata from code repositories in line with that schema, so training materials can be described consistently and discovered more easily.
+              <a
+                href="https://www.discorse.de/news/2025-02-19_what-is-discorse/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-primary-600 hover:text-primary-700 underline underline-offset-1"
+              >Learn more</a>
             </p>
             <NuxtLink
               to="/dashboard"
@@ -47,11 +59,12 @@
 import { ref } from 'vue'
 
 useHead({
-  title: 'CoMET-RS - Code Metadata Extraction Tool for Research Software',
+  title: 'DiscoRSE - Describe your RSE open educational resources',
   meta: [
     {
       name: 'description',
-      content: 'Automatically extract comprehensive metadata from code repositories to generate machine-actionable Software Management Plans (SMP) and CodeMeta schemas.',
+      content:
+        'Extract metadata from training material repositories for the DiscoRSE project — improving discoverability of RSE open educational resources.',
     },
   ],
 })
