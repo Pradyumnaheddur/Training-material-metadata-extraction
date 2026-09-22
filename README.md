@@ -1,6 +1,3 @@
-<p align="center">
-  <img src="docs/img/background.gif" width="100%">
-</p>
 
 # DiscoRSE — Training Material Metadata Extraction
 
