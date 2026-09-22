@@ -2,128 +2,185 @@
   <img src="docs/img/background.gif" width="100%">
 </p>
 
-# Code Metadata Extraction Toolkit for Research Software (CoMET-RS)
+# DiscoRSE — Training Material Metadata Extraction
 
-This project is designed to automate the extraction of metadata from GitHub and GitLab repositories to generate a **Machine-Actionable Software Management Plan (SMP)**. It consists of two main components:
+This project extracts **structured metadata from training-material repositories** (mainly GitHub today) and exports it as **[Bioschemas TrainingMaterial](https://bioschemas.org/profiles/TrainingMaterial/1.0-RELEASE)** JSON-LD.
 
-1. **Backend** - A FastAPI-based service built with **Clean Architecture** principles that extracts metadata from GitHub, GitLab, and external sources (OpenAlex, Wayback Machine). The backend follows a layered architecture with clear separation of concerns: domain logic, use cases, adapters, and API endpoints.
-2. **Frontend** - A modern **Nuxt 3** application with Vue 3 and TypeScript, providing an intuitive user interface to interact with the metadata extraction service. Features include platform selection, repository input, and comprehensive metadata visualization.
+It supports the [DiscoRSE](https://www.discorse.de/) goal of making Research Software Engineering (RSE) open educational resources easier to find, describe, and reuse.
 
----
-
-## Setting Up and Running the Project
-
-### 1. Running Backend Service
-
-Follow the instructions in the [Backend README](./backend-migration/README.md) to install and run the backend server.
-
-### 2. Running Frontend Application
-
-Follow the steps in the [Frontend README](./frontend-migration/README.md) to set up and start the frontend application.
+The codebase is a fork of [CoMET-RS](https://github.com/zbmed-semtec/maSMP-metadata-extraction) (Code Metadata Extraction Toolkit for Research Software). The original **maSMP** and **CodeMeta** software pipelines are still available; the main focus of this fork is **training materials + Bioschemas**.
 
 ---
 
-## Running the Project with Docker
+## What this tool does
 
-To simplify deployment, you can use **Docker** and **Docker Compose** to run the entire project (Nuxt frontend + FastAPI backend).
+1. You provide a **GitHub** (or GitLab) repository URL.
+2. The backend reads platform metadata and common repo files (README, `CITATION.cff`, license, etc.).
+3. For **Bioschemas**, it builds training-oriented fields such as `name`, `description`, `keywords`, `abstract`, `teaches`, `learningResourceType`, `educationalLevel`, `license`, and `author`.
+4. You get JSON-LD plus optional enrichment (source, confidence, category: Minimum / Recommended / Optional).
+
+### Main components
+
+| Component | Stack | Role |
+|-----------|--------|------|
+| **Backend** (`backend-migration/`) | FastAPI, layered architecture | Extraction pipelines, schemas, API, CLI |
+| **Frontend** (`frontend-migration/`) | Nuxt 3, Vue 3, TypeScript | DiscoRSE-branded UI to run extraction and view results |
+
+Supported schemas:
+
+- **Bioschemas** — TrainingMaterial (primary for this fork)
+- **maSMP** — machine-actionable Software Management Plan (inherited)
+- **CODEMETA** — software metadata (inherited)
+
+---
+
+## Quick start with Docker (recommended)
 
 ### 1. Install Docker
 
-Ensure you have Docker installed on your system. You can download and install it from [Docker’s official website](https://www.docker.com/get-started).
+Download from [Docker’s website](https://www.docker.com/get-started).
 
-### 2. Build and Run the Containers
+### 2. Build and run
 
-From the project root, build and start both services:
+From the project root:
 
 ```sh
 docker compose up --build
 ```
 
-This will:
+This starts:
 
-- Build and start the **backend** (FastAPI) and **frontend** (Nuxt) containers.
-- Set up networking so the frontend can call the backend API.
+- **Backend** (FastAPI) on port **8000**
+- **Frontend** (Nuxt) on port **3000**
 
-### 3. Access the Application
+### 3. Open the app
 
-Once the containers are running:
+| Service | URL |
+|---------|-----|
+| Frontend UI | http://localhost:3000 |
+| Backend API | http://localhost:8000 |
+| API docs (Swagger) | http://localhost:8000/docs |
 
-- **Frontend UI:** [http://localhost:3000](http://localhost:3000)
-- **Backend API:** [http://localhost:8001](http://localhost:8001)
-- **API docs (Swagger):** [http://localhost:8001/docs](http://localhost:8001/docs)
+Example Bioschemas call:
 
-### 4. Stopping the Containers
+```text
+GET /api/metadata/enriched?repo_url=https://github.com/owner/repo&schema=Bioschemas
+```
 
-To stop the running containers:
+### 4. Stop
 
 ```sh
 docker compose down
 ```
 
-This shuts down and removes the containers but keeps the built images.
+### Authentication (recommended)
+
+GitHub rate limits are low without a token. For regular use or private repos:
+
+```bash
+export GITHUB_TOKEN=ghp_...      # GitHub
+export GITLAB_TOKEN=glpat_...    # GitLab
+```
+
+You can also paste a token in the web UI when extracting.
 
 ---
 
-## Python Package
+## Running without Docker
 
-The backend is also available as a Python package (`comet-rs`) that can be used as a CLI tool or imported as a library in your Python code.
+### Backend
 
-### Installation
+See [backend-migration/README.md](./backend-migration/README.md):
 
 ```bash
-pip install comet-rs
+cd backend-migration
+pip install -r requirements.txt
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Python 3.10+ is required.
+### Frontend
 
-### CLI Usage
+See [frontend-migration/README.md](./frontend-migration/README.md):
 
-Extract full metadata from a repository:
+```bash
+cd frontend-migration
+npm install
+npm run dev
+```
+
+Frontend expects the API at `http://127.0.0.1:8000` by default.
+
+---
+
+## CLI and Python package
+
+The backend is also available as **`comet-rs`** (package name inherited from CoMET-RS).
+
+```bash
+pip install comet-rs   # or install from this repo’s backend-migration/
+```
+
+Python **3.10+** required.
+
+### Extract training-material metadata (Bioschemas)
+
+```bash
+comet-rs extract https://github.com/owner/repo Bioschemas --with-enrichment
+```
+
+### Extract software metadata (legacy schemas)
 
 ```bash
 comet-rs extract https://github.com/owner/repo maSMP --with-enrichment
+comet-rs extract https://github.com/owner/repo CODEMETA
 ```
 
-Extract a single property with source and confidence:
+### Single property
 
 ```bash
-comet-rs extract_property https://github.com/owner/repo author
+comet-rs extract_property https://github.com/owner/repo abstract --schema Bioschemas
 ```
 
-### Python API Usage
+### From Python
 
 ```python
 import os
 from app.layer_4.services.metadata_service import run_extraction
 
-# Extract full metadata
 jsonld_document, enriched = run_extraction(
     repo_url="https://github.com/owner/repo",
-    schema="maSMP",                              # or "CODEMETA"
+    schema="Bioschemas",  # or "maSMP" / "CODEMETA"
     access_token=os.getenv("GITHUB_TOKEN"),
     with_enrichment=True,
 )
-
-# jsonld_document: maSMP/CODEMETA JSON-LD (dict)
-# enriched: per-property source/confidence/category
 ```
 
-### Authentication
+More detail: [backend-migration/README_PYPI.md](./backend-migration/README_PYPI.md).
 
-For heavier use or private repositories, set environment variables:
+---
 
-```bash
-export GITHUB_TOKEN=ghp_...      # for GitHub repositories
-export GITLAB_TOKEN=glpat_...    # for GitLab repositories
-```
+## Project status (this fork)
 
-For more details, see the [PyPI README](./backend-migration/README_PYPI.md).
+**Done / in progress**
+
+- Bioschemas TrainingMaterial schema + GitHub training extraction pipeline
+- README / CITATION-oriented training field parsing (`abstract`, `teaches`, `learningResourceType`, …)
+- Web UI support for Bioschemas (Minimum / Recommended / Optional)
+- DiscoRSE frontend branding (logo, About, footer)
+- CLI support for Bioschemas
+
+**Still planned**
+
+- Broader testing on real RSE training repos (e.g. via [glittr.org](https://www.glittr.org/))
+- First fully functional GitHub release
+- Zenodo metadata extraction (draft)
+- Further Bioschemas field coverage and quality improvements
 
 ---
 
 ## Contributing
 
-If you want to contribute to this project, feel free to fork the repository, create a new branch, and submit a pull request with your changes.
+Fork the repository, create a branch, and open a pull request with your changes.
 
 ## License
 
